@@ -76,9 +76,9 @@ services:
     image: axllent/mailpit
     container_name: project_laravelcc2_mailpit
     restart: unless-stopped
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+   ports:
+      - "1030:1025"  # ubah port host agar tidak bentrok
+      - "8030:8025"
     networks:
       - app-network
 
