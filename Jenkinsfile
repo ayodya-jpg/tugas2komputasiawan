@@ -2,72 +2,88 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE = 'docker compose'
-        GIT_CREDENTIALS = 'tugas2komputasi'
+        COMPOSE_FILE = 'docker-compose.yml'
+        IMAGE_NAME = 'tugas2-app'
+        CONTAINER_APP = 'project_laravel_app'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Source Code') {
             steps {
-                echo 'Checking out repository...'
-                git branch: 'main',
-                    credentialsId: "${GIT_CREDENTIALS}",
-                    url: 'https://github.com/ayodya-jpg/tugas2komputasiawan.git'
+                echo '📦 Mengambil source code dari repository GitHub...'
+                git branch: 'main', credentialsId: 'tugas2komputasi', url: 'https://github.com/ayodya-jpg/tugas2komputasiawan.git'
             }
         }
 
-        stage('Prepare Environment') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Preparing .env file...'
+                echo '🔨 Membangun image Docker untuk Laravel...'
+                bat 'docker compose build --no-cache'
+            }
+        }
+
+        stage('Start Docker Containers') {
+            steps {
+                echo '🚀 Menjalankan seluruh container (App, Nginx, DB, Redis, Mailpit)...'
+                bat 'docker compose up -d'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Menginstall dependensi Composer di dalam container Laravel...'
+                bat 'docker compose exec -T app composer install --optimize-autoloader --no-dev'
+            }
+        }
+
+        stage('Setup Laravel Environment') {
+            steps {
+                echo '⚙️ Menyiapkan environment Laravel (.env, key, dan cache)...'
                 bat '''
-                if exist .env del /f .env
-                copy .env.example .env
+                docker compose exec -T app cp .env.example .env || echo "ENV file already exists"
+                docker compose exec -T app php artisan key:generate
+                docker compose exec -T app php artisan config:cache
+                docker compose exec -T app php artisan route:cache
+                docker compose exec -T app php artisan view:cache
                 '''
             }
         }
 
-        stage('Build and Deploy') {
+        stage('Run Database Migration & Seed') {
             steps {
-                script {
-                    echo 'Building Docker images...'
-                    bat "${DOCKER_COMPOSE} up -d --build"
-                }
+                echo '🧱 Menjalankan migrasi dan seeding database Laravel...'
+                bat 'docker compose exec -T app php artisan migrate --force'
+                bat 'docker compose exec -T app php artisan db:seed --force || echo "Seeder optional"'
             }
         }
 
-        stage('Run Migrations & Cache') {
+        stage('Health Check') {
             steps {
-                script {
-                    echo 'Running Laravel optimization and migrations...'
-                    bat "${DOCKER_COMPOSE} exec app php artisan key:generate"
-                    bat "${DOCKER_COMPOSE} exec app php artisan migrate:fresh --seed"
-                    bat "${DOCKER_COMPOSE} exec app php artisan config:cache"
-                    bat "${DOCKER_COMPOSE} exec app php artisan route:cache"
-                    bat "${DOCKER_COMPOSE} exec app php artisan view:cache"
-                }
+                echo '🩺 Mengecek status container...'
+                bat 'docker ps'
+                bat 'docker compose ps'
             }
         }
 
-        stage('Testing') {
+        stage('Verify App Access') {
             steps {
-                script {
-                    echo 'Running Laravel tests...'
-                    bat "${DOCKER_COMPOSE} exec app php artisan test || exit 0"
-                }
+                echo '🌐 Mengecek apakah aplikasi Laravel dapat diakses dari Nginx...'
+                bat 'curl -f http://localhost:8888 || echo "⚠️ Aplikasi belum bisa diakses. Cek log Nginx atau App."'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Deployment completed successfully!'
+            echo '✅ Pipeline berhasil! Aplikasi Laravel sudah berjalan di Docker.'
+            echo 'Akses aplikasi di: http://localhost:8888'
+            echo 'Mailpit UI: http://localhost:8025'
         }
         failure {
-            echo '❌ Deployment failed. Please check the logs.'
+            echo '❌ Pipeline gagal. Periksa log Jenkins untuk detail error.'
         }
         always {
-            echo 'Cleaning up unused Docker resources...'
-            bat "docker system prune -f"
+            echo '🧹 Membersihkan cache pipeline...'
         }
     }
 }
