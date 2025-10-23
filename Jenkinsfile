@@ -36,6 +36,7 @@ pipeline {
                 docker compose exec -T app sh -c "cp .env.example .env || echo ENV sudah ada"
                 docker compose exec -T app composer install --no-interaction --prefer-dist --optimize-autoloader
                 docker compose exec -T app composer install
+                docker compose exec -T app chmod -R 777 storage bootstrap/cache
                 docker compose exec -T app php artisan key:generate
                 docker compose exec -T app php artisan migrate --force
                 docker compose exec -T app php artisan config:cache
