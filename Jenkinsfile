@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE_FILE = 'docker-compose.yml'
+        COMPOSE_FILE = 'docker-compose.yaml'
         IMAGE_NAME = 'tugas2-app'
         CONTAINER_APP = 'project_laravel_app'
     }
