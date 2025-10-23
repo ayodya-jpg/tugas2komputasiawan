@@ -70,7 +70,6 @@ pipeline {
 
         stage('Clean Up') {
             steps {
-                [cite_start]// Bersihkan image yang tidak terpakai [cite: 224]
                 sh 'docker image prune -f'
             }
         }
