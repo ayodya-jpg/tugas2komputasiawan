@@ -4,10 +4,12 @@ pipeline {
     environment {
         COMPOSE_FILE = 'docker-compose.yaml'
         IMAGE_NAME = 'ayodyawasesa/tugas2-app'
-        CONTAINER_APP = 'project_laravel_app'
+        CONTAINER_APP = 'tugas2'
+        DOCKERHUB_CREDENTIALS = credentials('tugas2komputasi')
     }
 
     stages {
+
         stage('Checkout Source Code') {
             steps {
                 echo '📦 Mengambil source code dari repository GitHub...'
@@ -19,7 +21,7 @@ pipeline {
             steps {
                 echo '🚀 Membangun image dan menjalankan seluruh container...'
                 bat '''
-                docker compose down
+                docker compose down || exit 0
                 docker compose build --no-cache
                 docker compose up -d
                 '''
@@ -30,12 +32,23 @@ pipeline {
             steps {
                 echo '⚙️ Menyiapkan environment Laravel...'
                 bat '''
-                docker compose exec -T app cp .env.example .env || echo "ENV sudah ada"
+                docker compose exec -T app sh -c "cp .env.example .env || echo ENV sudah ada"
                 docker compose exec -T app composer install --no-interaction --prefer-dist --optimize-autoloader
                 docker compose exec -T app php artisan key:generate
                 docker compose exec -T app php artisan migrate --force
                 docker compose exec -T app php artisan config:cache
                 '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo '📤 Mengunggah image ke Docker Hub...'
+                bat """
+                docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%
+                docker tag tugas2-app %IMAGE_NAME%:latest
+                docker push %IMAGE_NAME%:latest
+                """
             }
         }
 
@@ -49,11 +62,14 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline berhasil! Aplikasi Laravel sudah berjalan.'
-            echo 'Akses di: http://localhost:8888'
+            echo '✅ Pipeline berhasil! Aplikasi Laravel sudah berjalan dan image telah dikirim ke Docker Hub.'
+            echo 'Akses aplikasi di: http://localhost:8888'
         }
         failure {
             echo '❌ Pipeline gagal. Periksa log Jenkins untuk detail error.'
+        }
+        always {
+            echo '🧹 Membersihkan cache pipeline...'
         }
     }
 }
