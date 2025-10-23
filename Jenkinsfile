@@ -21,7 +21,8 @@ pipeline {
             steps {
                 echo '🚀 Membangun image dan menjalankan seluruh container...'
                 bat '''
-                docker compose down || exit 0
+                docker compose down --remove-orphans
+                docker rm -f project_laravelcc_komputasi || echo "Tidak ada container lama"
                 docker compose build --no-cache
                 docker compose up -d
                 '''
