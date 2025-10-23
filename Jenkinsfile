@@ -6,7 +6,7 @@ pipeline {
             steps {
                 // Tarik kode terbaru dari GitHub
                 // GANTI 'ID-KREDENSIAL' dan 'URL-REPO'
-                git credentialsId: 'ID-KREDENSIAL-GITHUB-ANDA', url: 'URL-REPO-GITHUB-ANDA.git', branch: 'main'
+                git credentialsId: 'tugas2komputasi', url: 'https://github.com/ayodya-jpg/tugas2komputasiawan.git', branch: 'main'
             }
         }
 
