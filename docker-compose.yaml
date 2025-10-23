@@ -1,5 +1,4 @@
 services:
-  # 1. Service Aplikasi (Laravel/PHP-FPM)
   app:
     build:
       context: .
@@ -30,7 +29,6 @@ services:
       - db
       - redis
 
-  # 2. Service Web Server (Nginx)
   nginx:
     image: nginx:alpine
     container_name: project_laravelcc2_nginx
@@ -44,8 +42,6 @@ services:
       - app-network
     depends_on:
       - app
-
-  # 3. Service Database (MySQL)
   db:
     image: mysql:8.0
     container_name: project_laravelcc2_mysql
@@ -63,7 +59,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # 4. Service Cache (Redis)
   redis:
     image: redis:alpine
     container_name: project_laravelcc2_redis
@@ -71,13 +66,12 @@ services:
     networks:
       - app-network
 
-  # 5. Service Email Catcher (Mailpit)
   mailpit:
     image: axllent/mailpit
     container_name: project_laravelcc2_mailpit
     restart: unless-stopped
    ports:
-      - "1030:1025"  # ubah port host agar tidak bentrok
+      - "1030:1025" 
       - "8030:8025"
     networks:
       - app-network
