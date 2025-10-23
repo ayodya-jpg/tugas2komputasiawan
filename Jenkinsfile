@@ -1,78 +1,73 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_COMPOSE = 'docker compose'
+        GIT_CREDENTIALS = 'tugas2komputasi'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Clone repository dari GitHub
-                git credentialsId: 'tugas2komputasi',
-                    url: 'https://github.com/ayodya-jpg/tugas2komputasiawan.git',
-                    branch: 'main'
+                echo 'Checking out repository...'
+                git branch: 'main',
+                    credentialsId: "${GIT_CREDENTIALS}",
+                    url: 'https://github.com/ayodya-jpg/tugas2komputasiawan.git'
+            }
+        }
+
+        stage('Prepare Environment') {
+            steps {
+                echo 'Preparing .env file...'
+                bat '''
+                if exist .env del /f .env
+                copy .env.example .env
+                '''
             }
         }
 
         stage('Build and Deploy') {
             steps {
                 script {
-                    echo "Preparing .env file..."
-
-                    // Hapus file .env lama jika ada
-                    bat '''
-                        if exist .env del /f .env
-                    '''
-
-                    // Salin .env.example jadi .env
-                    bat '''
-                        copy .env.example .env
-                    '''
-
-                    // Ganti nilai di .env menggunakan PowerShell
-                    // Ganti DB_HOST, REDIS_HOST, MAIL_HOST, DB_USERNAME, DB_PASSWORD
-                    powershell '''
-                        (Get-Content .env) -replace "DB_HOST=127.0.0.1", "DB_HOST=db" |
-                        ForEach-Object {$_ -replace "REDIS_HOST=127.0.0.1", "REDIS_HOST=redis"} |
-                        ForEach-Object {$_ -replace "MAIL_HOST=127.0.0.1", "MAIL_HOST=mailpit"} |
-                        ForEach-Object {$_ -replace "DB_USERNAME=root", "DB_USERNAME=laraveluser"} |
-                        ForEach-Object {$_ -replace "DB_PASSWORD=", "DB_PASSWORD=password"} |
-                        Set-Content .env -Encoding UTF8
-                    '''
-
-                    echo "Building Docker images..."
-                    bat 'docker compose up -d --build'
+                    echo 'Building Docker images...'
+                    bat "${DOCKER_COMPOSE} up -d --build"
                 }
             }
         }
 
-        stage('Initialize Application') {
+        stage('Run Migrations & Cache') {
             steps {
                 script {
-                    echo "Waiting for DB to be ready..."
-                    sleep 15
-
-                    echo "Generating App Key..."
-                    bat 'docker compose exec app php artisan key:generate'
-
-                    echo "Fixing permissions..."
-                    bat 'docker compose exec app sh -c "chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache"'
-
-                    echo "Installing NPM packages..."
-                    bat 'docker compose exec app npm install'
-
-                    echo "Building Vite assets..."
-                    bat 'docker compose exec app npm run build'
-
-                    echo "Running migrations..."
-                    bat 'docker compose exec app php artisan config:clear'
-                    bat 'docker compose exec app php artisan migrate --force'
+                    echo 'Running Laravel optimization and migrations...'
+                    bat "${DOCKER_COMPOSE} exec app php artisan key:generate"
+                    bat "${DOCKER_COMPOSE} exec app php artisan migrate:fresh --seed"
+                    bat "${DOCKER_COMPOSE} exec app php artisan config:cache"
+                    bat "${DOCKER_COMPOSE} exec app php artisan route:cache"
+                    bat "${DOCKER_COMPOSE} exec app php artisan view:cache"
                 }
             }
         }
 
-        stage('Clean Up') {
+        stage('Testing') {
             steps {
-                echo "Cleaning up unused Docker images..."
-                bat 'docker image prune -f'
+                script {
+                    echo 'Running Laravel tests...'
+                    bat "${DOCKER_COMPOSE} exec app php artisan test || exit 0"
+                }
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment completed successfully!'
+        }
+        failure {
+            echo '❌ Deployment failed. Please check the logs.'
+        }
+        always {
+            echo 'Cleaning up unused Docker resources...'
+            bat "docker system prune -f"
         }
     }
 }
