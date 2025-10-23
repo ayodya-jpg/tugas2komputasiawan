@@ -74,7 +74,7 @@ services:
   # 5. Service Email Catcher (Mailpit)
   mailpit:
     image: axllent/mailpit
-    container_name: project_laravel_mailpit
+    container_name: project_laravel_komputasi
     restart: unless-stopped
     ports:
       - "1025:1025"
