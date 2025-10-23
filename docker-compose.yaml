@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: project_laravel_app
+    container_name: project_laravelcc_komputasi
     restart: unless-stopped
     environment:
       - APP_NAME=${APP_NAME}
