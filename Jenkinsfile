@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         COMPOSE_FILE = 'docker-compose.yaml'
-        IMAGE_NAME = 'tugas2-app'
+        IMAGE_NAME = 'ayodyawasesa/tugas2-app'
         CONTAINER_APP = 'project_laravel_app'
     }
 
