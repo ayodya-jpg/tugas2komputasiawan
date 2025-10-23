@@ -42,6 +42,7 @@ services:
       - app-network
     depends_on:
       - app
+
   db:
     image: mysql:8.0
     container_name: project_laravelcc2_mysql
@@ -70,8 +71,8 @@ services:
     image: axllent/mailpit
     container_name: project_laravelcc2_mailpit
     restart: unless-stopped
-   ports:
-      - "1030:1025" 
+    ports:
+      - "1030:1025"
       - "8030:8025"
     networks:
       - app-network
