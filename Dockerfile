@@ -1,17 +1,14 @@
 # Tahap 1: Base Image (PHP 8.2-FPM)
-# Menggunakan Alpine Linux agar image lebih kecil
 FROM php:8.2-fpm-alpine
 
-# Setel direktori kerja di dalam container [cite: 189-193]
-# Ini mirip dengan 'destination' di docker volume
+# Setel direktori kerja di dalam container
 WORKDIR /var/www/html
 
 # Install dependensi PHP yang umum untuk Laravel
-# (pdo_mysql, bcmath, mbstring, dll.)
 RUN apk add --no-cache \
     curl \
     git \
-    nodejs-current \  
+    nodejs-current \
     npm \
     libpng-dev \
     libxml2-dev \
@@ -33,11 +30,13 @@ RUN apk add --no-cache \
 # Install Composer (Manajer dependensi PHP)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Salin semua file proyek Anda ke dalam image
+# Salin semua file proyek ke dalam image
 COPY . .
 
-# Install dependensi via Composer
-# --optimize-autoloader & --no-dev untuk produksi
+# ✅ Tambahkan konfigurasi agar Git tidak error di folder ini
+RUN git config --global --add safe.directory /var/www/html
+
+# Install dependensi via Composer (mode produksi)
 RUN composer install --optimize-autoloader --no-dev
 
 # Atur kepemilikan file agar web server bisa menulis ke storage & cache
