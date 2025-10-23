@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: project_laravelcc_komputasi
+    container_name: project_laravelcc2_tugas
     restart: unless-stopped
     environment:
       - APP_NAME=${APP_NAME}
@@ -33,7 +33,7 @@ services:
   # 2. Service Web Server (Nginx)
   nginx:
     image: nginx:alpine
-    container_name: project_laravelcc_nginx
+    container_name: project_laravelcc2_nginx
     restart: unless-stopped
     ports:
       - "8888:80"
@@ -48,7 +48,7 @@ services:
   # 3. Service Database (MySQL)
   db:
     image: mysql:8.0
-    container_name: project_laravelcc_komputasi2
+    container_name: project_laravelcc2_mysql
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     environment:
@@ -66,7 +66,7 @@ services:
   # 4. Service Cache (Redis)
   redis:
     image: redis:alpine
-    container_name: project_laravelcc_redis
+    container_name: project_laravelcc2_redis
     restart: unless-stopped
     networks:
       - app-network
@@ -74,7 +74,7 @@ services:
   # 5. Service Email Catcher (Mailpit)
   mailpit:
     image: axllent/mailpit
-    container_name: project_laravelcc_komputasi
+    container_name: project_laravelcc2_mailpit
     restart: unless-stopped
     ports:
       - "1025:1025"
