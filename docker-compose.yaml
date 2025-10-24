@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build:
@@ -80,6 +82,7 @@ services:
   jenkins:
     image: jenkins/jenkins:lts
     container_name: project_laravelcc2_jenkins
+    restart: unless-stopped
     ports:
       - "8090:8080"
       - "50000:50000"
@@ -87,7 +90,7 @@ services:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - default
+      - app-network   
 
 networks:
   app-network:
@@ -96,3 +99,4 @@ networks:
 volumes:
   db-data:
     name: praktikum2cc
+  jenkins_home: {}   
