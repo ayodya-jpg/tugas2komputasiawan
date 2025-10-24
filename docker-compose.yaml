@@ -74,8 +74,8 @@ services:
     container_name: project_laravelcc2_mailpit
     restart: unless-stopped
     ports:
-      - "1030:1025"
-      - "8030:8025"
+      - "1035:1025"
+      - "8035:8025"
     networks:
       - app-network
 
