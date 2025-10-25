@@ -27,16 +27,16 @@ pipeline {
             }
         }
 
-        stage('Setup Laravel Environment') {
+                stage('Setup Laravel Environment') {
             steps {
-                echo '⚙️ Setup Laravel...'
+                echo '⚙️ Menyiapkan environment Laravel...'
                 bat '''
-                docker compose exec -T app sh -c "if [ ! -f .env ]; then cp .env.example .env; fi"
-                docker compose exec -T app composer install --no-interaction --prefer-dist --optimize-autoloader
-                docker compose exec -T app php artisan key:generate
-                docker compose exec -T app php artisan migrate --force || echo "Migration skipped"
-                docker compose exec -T app php artisan config:cache
-                docker compose exec -T app chmod -R 777 storage bootstrap/cache
+                docker compose exec -T app sh -c "cp .env.example .env || echo ENV sudah ada"
+                docker compose exec -T app sh -c "composer install --no-interaction --prefer-dist --optimize-autoloader"
+                docker compose exec -T app sh -c "chmod -R 777 storage bootstrap/cache"
+                docker compose exec -T app sh -c "php artisan key:generate"
+                docker compose exec -T app sh -c "php artisan migrate --force"
+                docker compose exec -T app sh -c "php artisan config:cache"
                 '''
             }
         }
