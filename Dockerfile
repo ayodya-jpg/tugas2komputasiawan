@@ -39,9 +39,11 @@ RUN git config --global --add safe.directory /var/www/html
 # Install dependensi via Composer (mode produksi)
 RUN composer install --optimize-autoloader --no-dev
 
-# Atur kepemilikan file agar web server bisa menulis ke storage & cache
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+# Atur kepemilikan dan izin file langsung di build
+RUN chown -R www-data:www-data storage bootstrap/cache || true \ && chmod -R 777 storage bootstrap/cache || true
+
+# Jalankan container sebagai root agar Jenkins bisa akses semua file
+USER root
 
 # Expose port default untuk PHP-FPM
 EXPOSE 9000
