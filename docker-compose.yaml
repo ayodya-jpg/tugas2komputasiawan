@@ -25,6 +25,7 @@ services:
       - MAIL_PORT=1025
     volumes:
       - .:/var/www/html
+      - .env:/var/www/html/.env
     networks:
       - app-network
     depends_on:
