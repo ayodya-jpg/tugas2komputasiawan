@@ -41,13 +41,6 @@ pipeline {
             }
         }
         
-        stage('Generate APP Key') {
-            steps {
-                bat 'docker compose exec -T app php artisan key:generate'
-            }
-        }
-
-
         stage('Push Docker Image') {
             steps {
                 echo '📤 Mengunggah image ke Docker Hub...'
